@@ -152,22 +152,26 @@ class ArtworkController {
     function page_artworks(){
         $page = isset($_GET['page']) && is_numeric($_GET['page']) && $_GET['page'] >= 1 ? $_GET['page'] : 1;
         $keyword = "";
+        $json_keyword = "[]";
         $where = "";
 
         if(isset($_GET['hash_tags'])){
             $keyword = $_GET['hash_tags'];
-            $_keyword_arr = json_decode($keyword);
+            $decode_arr = json_decode($keyword);
             $keyword_arr = [];
-            foreach($_keyword_arr as $item) $keyword_arr[] = "'$item->data'";
-            $inWhere = implode(", ", $keyword_arr);
-            
-            $where = "WHERE A.id IN (SELECT aid FROM artwork_tags WHERE name IN ($inWhere))";
+            if(is_array($decode_arr)){
+                // 해시태그 재조립
+                foreach($decode_arr as $item) $keyword_arr[] = "'$item->data'";
 
-            if(count($keyword_arr) === 0){
-                $keyword = "";
-                $where = "";
-            } else {
-                $keyword = "&hash_tags=" . urlencode($keyword);
+                if(count($keyword_arr) === 0){
+                    $keyword = "";
+                    $where = "";
+                } else {
+                    $keyword = "&hash_tags=" . urlencode($keyword);
+                    $inWhere = implode(", ", $keyword_arr);
+                    $where = "WHERE A.id IN (SELECT aid FROM artwork_tags WHERE name IN ($inWhere))";
+                    $json_keyword = $_GET['hash_tags'];
+                }
             }
         }
 
@@ -198,7 +202,8 @@ class ArtworkController {
                                                             LEFT JOIN users U ON U.ID = A.uid
                                                             LEFT JOIN (SELECT ROUND(AVG(score), 1) total, aid FROM scores GROUP BY aid) S ON S.aid = A.id
                                                             $where")),
-            "keyword" => $keyword
+            "keyword" => $keyword,
+            "json_keyword" => $json_keyword
         ]);
     }
 
@@ -270,7 +275,12 @@ class ArtworkController {
         if(!$artwork) back("해당 작품이 존재하지 않습니다.");
         if(!writer($artwork->uid)) back("권한이 없습니다.");                      
 
+        DB::query("DELETE FROM artwork_tags WHERE aid = ?", [$artwork->id]);
         DB::query("UPDATE artworks SET title = ?, contents = ?, tags = ? WHERE id = ?", [$title, $contents, $hash_tags, $aid]);
+
+        foreach(json_decode($hash_tags) as $tag){
+            DB::query("INSERT INTO artwork_tags(aid, name) VALUES (?, ?)", [$aid, $tag->data]);
+        }
         go("/artwork?id=$aid", "수정되었습니다.");
     }
 }

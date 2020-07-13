@@ -50,6 +50,7 @@ class HashModule {
         this.hiddenInput = document.createElement("input");
         this.hiddenInput.name = "hash_tags";
         this.hiddenInput.style.display = "none";
+        this.hiddenInput.value = JSON.stringify(this.hashs);
         this.root.append(this.hiddenInput);
 
         // (C과제 추가) 기본값 해시태그 작성

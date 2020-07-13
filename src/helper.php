@@ -1,4 +1,14 @@
 <?php
+function dd(){
+    foreach(func_get_args() as $arg){
+        echo "<pre>";
+        var_dump($arg);
+        echo "</pre>";
+    }
+    exit;
+}
+
+
 function user(){
     return isset($_SESSION['user']) ? $_SESSION['user'] : false;
 }

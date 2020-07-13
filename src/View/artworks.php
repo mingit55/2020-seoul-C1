@@ -120,7 +120,7 @@
     .then(res => res.json())
     .then(hash_tags => {
         console.log(hash_tags);
-        let entryHashModule = new HashModule("#search_hash_tags", hash_tags);
+        let entryHashModule = new HashModule("#search_hash_tags", hash_tags, <?=$json_keyword?>);
         entryHashModule.init();
     })
 </script>
