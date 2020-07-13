@@ -10,7 +10,7 @@
         <div class="row mt-4">
             <?php foreach($myList as $artwork):?>
             <div class="col-3">
-                <div class="card<?=isset($artwork->deleted) ? " border-danger" : ""?>" onclick="<?= isset($artwork->deleted) ? "" : "location.href='/artwork?id=".$artwork->id."'"?>">
+                <div class="card <?=isset($artwork->deleted) ? "deleted" :"" ?>" onclick="<?= isset($artwork->deleted) ? "" : "location.href='/artwork?id=".$artwork->id."'"?>">
                     <img src="/uploads/artworks/<?=$artwork->image?>" class="card-img-top" />
                     <div class="card-body">
                         <h5 class="card-title"><?=$artwork->title?></h5>
@@ -30,6 +30,12 @@
                         </div>
                     </div>
                 </div>
+                <?php if(isset($artwork->deleted)):?>
+                    <div class="py-3 px-2">
+                        <span class="badge text-muted">삭제사유</span>
+                        <p><?=nl2br($artwork->comment)?></p>
+                    </div>
+                <?php endif;?>
             </div>
             <?php endforeach;?>
         </div>

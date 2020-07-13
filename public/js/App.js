@@ -74,7 +74,13 @@ class App {
     getPapers(){
         return fetch("/has-papers")
             .then(res => res.json())
-            .then(list => list.papers);
+            .then(list => list.papers.map(paper => {
+                paper.id = parseInt(paper.id);
+                paper.width_size = parseInt(paper.width_size);
+                paper.height_size = parseInt(paper.height_size);
+                paper.infinity = parseInt(paper.infinity);
+                return paper;
+            }))
     }
 
     // 콘텍스트 메뉴 만들기

@@ -492,3 +492,25 @@ label#con-play {
 .context-menu .menu-item:not(:last-child) { border-bottom: 1px solid #ddd; }
 
 /* /출품신청 */
+
+
+/* 참가 작품 */
+.deleted { position: relative; }
+.deleted::after {
+    content: '관리자의 권한으로 삭제된 게시물입니다.';
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: #000a;
+    color: #fff;
+    font-size: 0.9em;
+    word-break: keep-all;
+    text-align: center;
+    line-height: 2em;
+    padding: 4em;
+    
+}
+/* /참가 작품 */
