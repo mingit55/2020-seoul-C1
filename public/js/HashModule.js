@@ -121,9 +121,6 @@ class HashModule {
                     return false;
                 }
 
-                // 해시 전송용 데이터 설정
-                this.hiddenInput.value = JSON.stringify(this.hashs);
-
                 // 추가시 초기화 - 자동완성, 인덱스, 인풋 밸류
                 this.setAutos("-");
                 let index = this.hashIndex;
@@ -143,6 +140,9 @@ class HashModule {
 
                 this.hashs.push({ id: index, data: "#" + text });
                 this.hashIndex = this.hashIndex + 1;
+
+                // 해시 전송용 데이터 설정
+                this.hiddenInput.value = JSON.stringify(this.hashs);
 
                 // 해시 삭제 이벤트 추가
                 span.addEventListener("click", () => {
