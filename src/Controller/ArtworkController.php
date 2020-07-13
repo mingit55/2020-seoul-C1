@@ -190,6 +190,7 @@ class ArtworkController {
                                         FROM artworks A 
                                         LEFT JOIN users U ON U.ID = A.uid 
                                         LEFT JOIN (SELECT ROUND(AVG(score), 1) total, aid FROM scores GROUP BY aid) S ON S.aid = A.id
+                                        WHERE DATEDIFF(NOW(), A.created_at) <= 7
                                         ORDER BY total DESC
                                         LIMIT 0, 4"),
             "artworks" => pagination($page, DB::fetchAll("SELECT DISTINCT A.*, user_name, type, IFNULL(total, 0) total
