@@ -5,7 +5,7 @@ const STATUS = {
 };
 
 class HashModule {
-    constructor(root, autoHash) {
+    constructor(root, autoHash, defaultTags = []) {
         this.root = document.querySelector(root); // 해시 모듈 들어갈 자리
         this.rootSelector = root;
         this.input; // 입력창
@@ -15,8 +15,8 @@ class HashModule {
         this.hiddenInput;
 
         this.status; // 현재 상태 STATUS
-        this.hashs = []; // 입력한 해시 데이터
-        this.hashIndex = 0; // 입력한 해시 인덱스 - 한개 저장시 자동으로 1 증가
+        this.hashs = defaultTags; // 입력한 해시 데이터
+        this.hashIndex = defaultTags.length + 1; // 입력한 해시 인덱스 - 한개 저장시 자동으로 1 증가
         this.prevInput = ""; // 지난 입력 결과
 
         this.autoHash = autoHash; // 자동 완성 데이터
@@ -51,6 +51,41 @@ class HashModule {
         this.hiddenInput.name = "hash_tags";
         this.hiddenInput.style.display = "none";
         this.root.append(this.hiddenInput);
+
+        // (C과제 추가) 기본값 해시태그 작성
+        this.hashs.forEach(({data, id}) => {
+            // 해시 DOM추가
+            let hash = document.createElement("div");
+            hash.innerText = data;
+            hash.classList.add("hash");
+
+            let span = document.createElement("span");
+            span.innerHTML = "&times;";
+            span.classList.add("hash-del");
+            hash.append(span);
+
+            this.hashList.append(hash);
+            // 해시 삭제 이벤트 추가
+            span.addEventListener("click", () => {
+                // DOM 요소 삭제
+                this.hashList.removeChild(hash);
+                // 해시 목록에서 제거
+                this.hashs = this.hashs.filter(item => item.id != id);
+                // 최대 상태 제거
+                this.setStatus(STATUS.DEFAULT);
+                // 해시 전송용 데이터 설정
+                this.hiddenInput.value = JSON.stringify(this.hashs);
+
+                // 삭제 해도 입력한 값과 중복된 태그가 남아있으면 중복 상태 변경
+                if (
+                    this.hashs.filter(
+                        item => item.data === "#" + this.input.value
+                    ).length > 0
+                ) {
+                    this.setStatus(STATUS.OVER);
+                }
+            });
+        });
 
         // 키 이벤트 설정
         this.input.addEventListener("keydown", e => {
