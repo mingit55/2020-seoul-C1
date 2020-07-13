@@ -56,17 +56,31 @@ class Glue extends Tools {
         let uint8 = Uint8ClampedArray.from(arr);
         let px, py; // 실제 픽셀 좌표
         let fx, fy; // forEach 파츠의 좌표
+        let gx, gy; // glueCanvas의 좌표
+
+        // 잘린 선을 저장해둘 캔버스
+        let sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = width;
+        sliceCanvas.height = height;
+        let sctx = sliceCanvas.getContext("2d");
 
         glueParts.reverse().forEach(part => {
-            for(px = part.x; px < part.x + part.src.width; px++){
-                for(py = part.y; py < part.y + part.src.height; py++){
+            // 잘린 선 붙여넣기
+            sctx.drawImage(part.sliceCanvas, part.x - x, part.y - y);
+
+            // 이미지 데이터 붙여넣기
+            for(px = x; px < x + width; px++){
+                for(py = y; py < y + height; py++){
                     fx = px - part.x;
                     fy = py - part.y;
+
+                    gx = px - x;
+                    gy = py - y;
 
                     let color = part.src.getColor(fx, fy);
                     if(!color) continue;
 
-                    let idx = px * 4 + py * 4 * width;
+                    let idx = gx * 4 + gy * 4 * width;
                     uint8[idx] = color.r;
                     uint8[idx + 1] = color.g;
                     uint8[idx + 2] = color.b;
@@ -79,6 +93,9 @@ class Glue extends Tools {
         let newPart = new Part({imageData});
         newPart.x = x;
         newPart.y = y;
+        newPart.sliceCanvas = sliceCanvas;
+        newPart.sctx = sctx;
+        newPart.updateSliceData();
         
         glueParts.forEach(part => {
             let idx = this.parts.findIndex(item => item == part);

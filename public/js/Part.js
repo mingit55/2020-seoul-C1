@@ -2,83 +2,93 @@ class Part {
     constructor(source){
         this.src = this.getSource(source);
 
+        // 이미지 데이터를 표시하는 캔버스
         this.canvas = document.createElement("canvas");
         this.canvas.width = this.src.width;
         this.canvas.height = this.src.height;
 
-        // 잘린 선
-        this.sliceLine = [];
-        this.prevLine = [];
+        // 잘린 선을 표시하는 캔버스
+        this.sliceCanvas = document.createElement("canvas");
+        this.sliceCanvas.width = this.src.width;
+        this.sliceCanvas.height = this.src.height;
+        this.sctx = this.sliceCanvas.getContext("2d");
 
         this.ctx = this.canvas.getContext("2d");
         this.ctx.fillStyle = "#000";
+        this.angle = 0;
         
         this.x = 0;
         this.y = 0;
         this.active = false;
+        this.angle = 0;
 
         
         this.update();
+        document.body.append(this.sliceCanvas);
     }
 
     // 회전 전 작업
     beforeRotate(){
+        // 이미지 데이터 저장
         this.prevSrc = this.src;
+        this.prevImage = document.createElement("canvas"); // putImageData는 각도가 반영되지 않으므로, 캔버스로 바꿈
+        this.prevImage.width = this.canvas.width;
+        this.prevImage.height = this.canvas.height;
+        let ctx = this.prevImage.getContext("2d");
+        ctx.putImageData(this.src.imageData, 0, 0);
+
+        // 잘린 선 데이터 저장
+        this.prevSlice = document.createElement("canvas");
+        this.prevSlice.width = this.sliceCanvas.width;
+        this.prevSlice.height = this.sliceCanvas.height;
+        let sctx = this.prevSlice.getContext("2d");
+        sctx.drawImage(this.sliceCanvas, 0, 0);
         
         let [,, width, height] = this.src.getSize();
         let wantSize = Math.sqrt( Math.pow(width, 2) + Math.pow(height, 2) );
         if(this.canvas.width < wantSize && this.canvas.height < wantSize){
             // 이미지의 가운데를 중점으로 최대 크기로 캔버스를 늘림
-            let max_size = Math.sqrt( Math.pow(width, 2) + Math.pow(height, 2) );
-            this.canvas.width = this.canvas.height = max_size;
-            let moveX = (max_size - width) / 2;
-            let moveY = (max_size - height) / 2;
+            this.canvas.width = this.canvas.height = wantSize;
+            this.sliceCanvas.width = this.sliceCanvas.height = wantSize;
+            let moveX = (wantSize - width) / 2;
+            let moveY = (wantSize - height) / 2;
             this.x = parseInt(this.x - moveX);
             this.y = parseInt(this.y - moveY);
-            this.sliceLine = this.sliceLine.map(([x, y]) => ([x + moveX, y + moveY]))
-            this.prevLine = JSON.parse(JSON.stringify(this.sliceLine));
-            this.ctx.clearRect(0, 0, max_size, max_size);
+            this.ctx.clearRect(0, 0, wantSize, wantSize);
         }
         
-
         // 캔버스의 중점
         this.angleX = this.angleY = this.canvas.width / 2;
-        
-
-        // 이미지를 담는 캔버스
-        this.copy = document.createElement("canvas");
-        this.copy.width = this.src.width;
-        this.copy.height = this.src.height;
-        let ctx = this.copy.getContext("2d");
-        ctx.putImageData(this.src.imageData, 0, 0);
-        
-        // 담은 이미지를 가운데로 맞춰서 뿌림
-        let x = this.angleX - this.copy.width / 2;
-        let y = this.angleY - this.copy.height / 2;
-        this.ctx.putImageData(this.src.imageData, x, y);
     }
 
     // 회전
     rotate(angle){
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.angle += angle;
+
+        let copy = document.createElement("canvas");
+        copy.width = this.canvas.width;
+        copy.height = this.canvas.height;
+        
+        let ctx = copy.getContext("2d");
+
+        ctx.translate(this.angleX, this.angleY);
+        ctx.rotate(this.angle);
+        ctx.translate(-this.angleX, -this.angleY);
+        
+        let x = this.angleX - this.prevSrc.width / 2;
+        let y = this.angleY - this.prevSrc.height / 2;
         // 이미지 데이터를 회전 후 재저장한다.
-        this.ctx.translate(this.angleX, this.angleY);
-        this.ctx.rotate(angle);
-        this.ctx.translate(-this.angleX, -this.angleY);
+        ctx.drawImage(this.prevImage, x, y);
 
-        let x = this.angleX - this.copy.width / 2;
-        let y = this.angleY - this.copy.height / 2;
-        this.ctx.drawImage(this.copy, x, y);
-
-        let source = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        let source = ctx.getImageData(0, 0, copy.width, copy.height);
         this.src = this.getSource({imageData: source});
 
-        this.sliceLine = this.prevLine.map(([x, y]) => {
-            let r = Math.sqrt(Math.pow(x - this.angleX, 2), + Math.pow(this.angleY - y, 2));
-            let nowAngle = Math.asin((this.angleY - y) / r);
-            let moveAngle = nowAngle + angle;
-            return [ this.angleX + Math.cos(moveAngle) * r, this.angleY - Math.sin(moveAngle) * r];
-        });
+        // 잘린 선을 회전 후 재저장한다.
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.drawImage(this.prevSlice, x, y);
+
+        this.sctx.clearRect(0, 0, this.sliceCanvas.width, this.sliceCanvas.height);
+        this.sctx.drawImage(copy, 0, 0);
     }
 
     // 회전 초기화 
@@ -88,9 +98,13 @@ class Part {
         let moveY = (this.canvas.height - this.src.height) / 2;
         this.x = parseInt(this.x + moveX);
         this.y = parseInt(this.y + moveY);
-        this.sliceLine = this.prevLine.map(([x, y]) => ([x - moveX, y - moveY]));
         this.canvas.width = this.src.width;
         this.canvas.height = this.src.height;
+        this.sliceCanvas = this.prevSlice;
+        this.sctx = this.prevSlice.getContext("2d");
+        this.angle = 0;
+
+        this.recalculate();
     }
     
     // 이미지 업데이트
@@ -106,9 +120,7 @@ class Part {
         }
 
         //파츠의 잘린 선
-        this.sliceLine.forEach(([x, y]) => {
-            this.ctx.fillRect(x, y, 1, 1);
-        });
+        this.ctx.drawImage(this.sliceCanvas, 0, 0);
     }
 
     // 소스 가져오기
@@ -158,7 +170,15 @@ class Part {
 
         this.x += x;
         this.y += y;
-        this.sliceLine = this.sliceLine.map(([px, py]) => ([px - x, py - y]));
+
+        // 잘린 선 데이터 수정
+        let sliceData = this.sctx.getImageData(0, 0, this.sliceCanvas.width, this.sliceCanvas.height);
+        
+        this.sliceCanvas.width = w;
+        this.sliceCanvas.height = h;
+        
+        this.sctx.clearRect(0, 0, w, h);
+        this.sctx.putImageData(sliceData, -x, -y);
     }
 
     // 이 파츠가 해당 파츠 주변에 근접해 있는지 검사
@@ -179,5 +199,25 @@ class Part {
             }
         }
         return false;
+    }
+
+    // 해당 파츠에서 실제로 잘린 선만 sliceCanvas에 남기기
+    updateSliceData(){
+        let sliceData = this.sctx.getImageData(0, 0, this.src.width, this.src.height).data;
+        this.sctx.clearRect(0, 0, this.sliceCanvas.width, this.sliceCanvas.height);
+
+        let tempColor = [];
+        Array.from(sliceData)
+            .forEach((color, i) => {
+                tempColor.push(color);
+                if(tempColor.length === 4){
+                    let x = Math.floor(i / 4) % this.src.width;
+                    let y = Math.floor((i / 4) / this.src.width);
+                    if(tempColor[3] !== 0 && this.src.isBorderPixel(x, y)){
+                        this.sctx.fillRect(x, y, 1, 1);
+                    }
+                    tempColor = [];
+                }
+            });
     }
 }
