@@ -229,6 +229,7 @@ class ArtworkController {
         $artwork = DB::find("artworks", $aid);
         if(!$artwork) back("해당 작품이 존재하지 않습니다.");
         DB::query("INSERT INTO scores(uid, aid, score) VALUES (?, ?, ?)", [user()->id, $aid, $score]);
+        DB::query("UPDATE users SET point = point + ? WHERE id = ?", [$score * 100, $artwork->uid]);
         go("/artwork?id=$aid", "평점이 반영되었습니다.");
     }
 
