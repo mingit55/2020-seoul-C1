@@ -162,6 +162,7 @@ class Store {
                     .then(url =>{
                         let paper = {
                             id: this.papers.length + 1,
+                            uid: this.uid,
                             image : url,
                             paper_name : this.addName.value,
                             company_name : this.addCompany.value,

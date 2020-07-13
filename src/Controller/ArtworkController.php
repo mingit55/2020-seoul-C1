@@ -251,6 +251,7 @@ class ArtworkController {
         DB::query("INSERT INTO artwork_bin(id, title, contents, uid, image, created_at, tags, comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
             $artwork->id,
             $artwork->title,
+            $artwork->contents,
             $artwork->uid,
             $artwork->image,
             $artwork->created_at,
@@ -262,8 +263,13 @@ class ArtworkController {
     }
 
     function process_edit(){
-        $artwork = DB::find("artworks", $_GET['id']);
+        extract($_POST);
+        $artwork = DB::find("artworks", $aid);
+        var_dump($artwork);
         if(!$artwork) back("해당 작품이 존재하지 않습니다.");
         if(!writer($artwork->uid)) back("권한이 없습니다.");                      
+
+        DB::query("UPDATE artworks SET title = ?, contents = ?, tags = ? WHERE id = ?", [$title, $contents, $hash_tags, $aid]);
+        go("/artwork?id=$aid", "수정되었습니다.");
     }
 }

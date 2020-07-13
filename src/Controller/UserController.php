@@ -40,7 +40,6 @@ class UserController {
             $filename
         ]);
 
-        exit;
         go("/", "정상적으로 회원가입 되었습니다.");
     }
 

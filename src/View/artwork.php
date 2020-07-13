@@ -85,7 +85,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                삭제하기
+                <h4>삭제하기</h4>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -93,8 +93,8 @@
                     <textarea name="comment" id="comment" cols="30" rows="10" class="form-control" required></textarea>
                 </div>
             </div>
-            <div class="modal footer text-right">
-                <button class="btn btn-primary">삭제하기</button>
+            <div class="modal-footer text-right">
+                <button class="btn btn-danger">삭제하기</button>
             </div>
         </div>
     </div>
@@ -107,7 +107,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                수정하기
+                <h4>수정하기</h4>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -122,7 +122,7 @@
                     <div id="edit_hash" class="hash-module"></div>
                 </div>
             </div>
-            <div class="modal footer text-right">
+            <div class="modal-footer text-right">
                 <button class="btn btn-primary">수정 완료</button>
             </div>
         </div>
